@@ -1,15 +1,36 @@
 import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
+import * as AWS  from 'aws-sdk'
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 
-//import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+const toDosTable = process.env.TODOS_TABLE
+const docClient = new AWS.DynamoDB.DocumentClient()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  //const todoId = event.pathParameters.todoId
- // const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
+  const todoId = event.pathParameters.todoId
+  const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
 
-  // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
-  //return undefined
+  
+  const params = {
+    TableName: toDosTable,
+    Key: {
+      userId: 'chaitra',
+      todoId: todoId
+    },
+    ExpressionAttributeNames: {
+      '#todo_name': 'name',
+    },
+    ExpressionAttributeValues: {
+      ':name': updatedTodo.name,
+      ':dueDate': updatedTodo.dueDate,
+      ':done': updatedTodo.done,
+    },
+    UpdateExpression: 'SET #todo_name = :name, dueDate = :dueDate, done = :done',
+    ReturnValues: 'ALL_NEW',
+  };
+
+  await docClient.update(params).promise();
 
   console.log(event);
   return {
@@ -18,6 +39,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': true
     },
-    body:"UPDATE TODOS"
+    body:JSON.stringify(updatedTodo)
   }
 }

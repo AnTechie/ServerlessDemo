@@ -3,12 +3,17 @@ import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 
 const toDosTable = process.env.TODOS_TABLE
+const todoIndex = process.env.TodoIdIndex
 const docClient = new AWS.DynamoDB.DocumentClient()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
-  //const userId = event.pathParameters.userId
-  const todos=getTodsByUser('Anjani123');
+  console.log('Caller event', event)
+  console.log(event.pathParameters.userId)
+  const userId = event.pathParameters.userId
+
+  const result =await getTodosByUser(userId);
+
   console.log(event);
   return {
     statusCode: 201,
@@ -17,18 +22,19 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify({
-      items: todos
+      items: result.Items
     })
   }
 }
 
-async function getTodsByUser(userId:string)
+async function getTodosByUser(userId:string)
 {
-  console.log(userId);
-
-  const result = await docClient.scan({
-    TableName: toDosTable
-  }).promise()
-
-  return result.Items;
+  return await docClient.query({
+    TableName : toDosTable,
+    IndexName : todoIndex,
+    KeyConditionExpression: 'userId = :userId',
+    ExpressionAttributeValues: {
+        ':userId': userId
+    }
+}).promise()
 }

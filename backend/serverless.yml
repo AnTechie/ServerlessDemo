@@ -8,13 +8,13 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs10.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-west-2'}
 
   environment:
-    TODOS_TABLE: Todos1-${self:provider.stage}
+    TODOS_TABLE: Todos4-${self:provider.stage}
     TODO_ID_INDEX: TodoIdIndex
   iamRoleStatements:
     - Effect: Allow
@@ -23,7 +23,13 @@ provider:
         - dynamodb:Scan
         - dynamodb:PutItem
         - dynamodb:GetItem
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}    
+        - dynamodb:DeleteItem
+        - dynamodb:UpdateItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODO_ID_INDEX}      
 custom:
   topicName: TodosTopic-${self:provider.stage}
   documentation:
@@ -48,7 +54,7 @@ functions:
     events:
       - http:
           method: get
-          path: todos
+          path: GetTodos/{userId}
           cors: true
 
   # TODO: Configure this function
@@ -94,21 +100,20 @@ resources:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: dueDate
-            AttributeType: S  
           - AttributeName: todoId
             AttributeType: S
         KeySchema:
-          - AttributeName: todoId
+          - AttributeName: userId
             KeyType: HASH
-          - AttributeName: dueDate
-            KeyType: RANGE
+          - AttributeName: todoId
+            KeyType: RANGE  
+        
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.TODO_ID_INDEX}
             KeySchema:
-              - AttributeName: userId
+              - AttributeName: todoId
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
