@@ -15,10 +15,11 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 console.log(event);
   const parsedBody = JSON.parse(event.body)
   const itemId = uuid.v4()
-
+  const timestamp = new Date().toISOString()
   const newItem = {
     userId: 'chaitra',
     todoId: itemId,
+    createdAt: timestamp,
     ...parsedBody,
   }
 
