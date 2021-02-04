@@ -1,6 +1,7 @@
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
+import { getUserId } from '../../lambda/utils'
 
 const toDosTable = process.env.TODOS_TABLE
 const todoIndex = process.env.TodoIdIndex
@@ -10,7 +11,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   // TODO: Get all TODO items for a current user
   console.log('Caller event', event)
   console.log(event.pathParameters.userId)
-  const userId = event.pathParameters.userId
+  //const userId = event.pathParameters.userId
+  const userId=getUserId(event)
 
   const result =await getTodosByUser(userId);
 
