@@ -4,9 +4,12 @@ import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { getUserId } from '../../lambda/utils'
 import { createLogger } from '../../utils/logger'
+import * as AWSXRAY from 'aws-xray-sdk'
 
 const toDosTable = process.env.TODOS_TABLE
-const docClient = new AWS.DynamoDB.DocumentClient()
+const XAWS = AWSXRAY.captureAWS(AWS);
+
+const docClient = new XAWS.DynamoDB.DocumentClient()
 const logger = createLogger('Create')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

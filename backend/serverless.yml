@@ -9,6 +9,9 @@ plugins:
 provider:
   name: aws
   runtime: nodejs10.x
+  tracing:
+    lambda: true
+    apiGateway: true 
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-west-2'}
@@ -86,7 +89,12 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
- 
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new todo
+            description: Create a new todo
+            requestModels:
+              'application/json': ToDoRequest
   # TODO: Configure this function
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
@@ -221,3 +229,11 @@ resources:
         Name: ${self:provider.environment.AUTH_0_SECRET_ID}
         Description: Auth0 secret
         KmsKeyId: !Ref KMSKey
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false

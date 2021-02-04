@@ -1,5 +1,7 @@
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
+import * as AWSXRAY from 'aws-xray-sdk'
+
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import * as uuid from 'uuid'
 import { getUserId } from '../../lambda/utils'
@@ -7,8 +9,10 @@ import { createLogger } from '../../utils/logger'
 
 
 //import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
+const XAWS = AWSXRAY.captureAWS(AWS);
+
 const toDosTable = process.env.TODOS_TABLE
-const docClient = new AWS.DynamoDB.DocumentClient()
+const docClient = new XAWS.DynamoDB.DocumentClient()
 const logger = createLogger('Create')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

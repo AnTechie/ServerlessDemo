@@ -1,8 +1,10 @@
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
+import * as AWSXRAY from 'aws-xray-sdk'
+const XAWS = AWSXRAY.captureAWS(AWS);
 
-const s3 = new AWS.S3({
+const s3 = new XAWS.S3({
   signatureVersion: 'v4'
 })
 const bucketName = process.env.IMAGES_S3_BUCKET
