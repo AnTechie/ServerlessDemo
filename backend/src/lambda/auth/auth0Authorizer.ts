@@ -5,6 +5,7 @@ import { verify } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
 
 import { JwtPayload } from '../../auth/JwtPayload'
+import * as fs from 'fs'
 
 const logger = createLogger('auth')
 const cert = `-----BEGIN CERTIFICATE-----
@@ -26,10 +27,7 @@ nkKdGHQ+MjaOjNPGZ/8hWJ0e+EHOThjFTTW54LwkFZDX22YZzrjVbgUo3VDjUFZR
 2PV6MvB0WzLgkKJTl6LodEs+5ASwQj9sJLB9xmbC7a30GbvnbfQNXZEFCGfmZCoH
 w7Bx3w0PDFaNUks0h2NHPik=
 -----END CERTIFICATE-----`
-// TODO: Provide a URL that can be used to download a certificate that can be used
-// to verify JWT token signature.
-// To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
-//const jwksUrl = '...'
+
 
 export const handler = async (
   event: CustomAuthorizerEvent
