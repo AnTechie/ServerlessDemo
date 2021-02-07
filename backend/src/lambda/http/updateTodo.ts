@@ -1,44 +1,22 @@
 import 'source-map-support/register'
-
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
-import * as AWS  from 'aws-sdk'
-import * as AWSXRAY from 'aws-xray-sdk'
-
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
-import { getUserId } from '../../lambda/utils'
 import { createLogger } from '../../utils/logger'
+import { updateTodo } from '../../businessLogic/todos'
+
 
 const logger = createLogger('Update')
-
-const XAWS = AWSXRAY.captureAWS(AWS);
-
-const toDosTable = process.env.TODOS_TABLE
-const docClient = new XAWS.DynamoDB.DocumentClient()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
-
   
-  const params = {
-    TableName: toDosTable,
-    Key: {
-      userId: getUserId(event),
-      todoId: todoId
-    },
-    ExpressionAttributeNames: {
-      '#todo_name': 'name',
-    },
-    ExpressionAttributeValues: {
-      ':name': updatedTodo.name,
-      ':dueDate': updatedTodo.dueDate,
-      ':done': updatedTodo.done,
-    },
-    UpdateExpression: 'SET #todo_name = :name, dueDate = :dueDate, done = :done',
-    ReturnValues: 'ALL_NEW',
-  };
+  const authorization=event.headers.Authorization
+  const split=authorization.split(' ')
+  const jwtToken=split[1]
 
-  await docClient.update(params).promise();
+  await updateTodo(updatedTodo,jwtToken,todoId)
+  
   logger.info("todo updated ${todoId}")
   console.log(event);
   return {

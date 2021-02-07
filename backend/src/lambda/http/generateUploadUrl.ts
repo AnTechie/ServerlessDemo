@@ -1,26 +1,16 @@
 import 'source-map-support/register'
-import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import * as AWSXRAY from 'aws-xray-sdk'
-const XAWS = AWSXRAY.captureAWS(AWS);
+import { getUploadUrl } from '../../businessLogic/todos'
+import { createLogger } from '../../utils/logger'
 
-const s3 = new XAWS.S3({
-  signatureVersion: 'v4'
-})
-const bucketName = process.env.IMAGES_S3_BUCKET
-const urlExpiration = process.env.SIGNED_URL_EXPIRATION
+const logger = createLogger('Create')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  //const todoId = event.pathParameters.todoId
 
+logger.info("generateuploadurl lambda called")
+ const todoId = event.pathParameters.todoId
 
- const attachment = event.pathParameters.todoId
-
- console.log(attachment);
-
- const url = getUploadUrl(attachment)
-
- 
+ const url =await getUploadUrl(todoId)
 
   return {
     statusCode: 201,
@@ -33,11 +23,5 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     })
  
 }
-function getUploadUrl(imageId: string) {
-  return s3.getSignedUrl('putObject', {
-    Bucket: bucketName,
-    Key: imageId,
-    Expires: urlExpiration
-  })
-}
+
 }

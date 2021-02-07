@@ -1,31 +1,19 @@
 import 'source-map-support/register'
-import * as AWS  from 'aws-sdk'
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import { getUserId } from '../../lambda/utils'
 import { createLogger } from '../../utils/logger'
-import * as AWSXRAY from 'aws-xray-sdk'
+import { deleteTodo } from '../../businessLogic/todos'
 
-const toDosTable = process.env.TODOS_TABLE
-const XAWS = AWSXRAY.captureAWS(AWS);
 
-const docClient = new XAWS.DynamoDB.DocumentClient()
 const logger = createLogger('Create')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
-
-  console.log(todoId);
-  var params = {
-    TableName:toDosTable,
-    Key:{
-        'todoId': todoId,
-        'userId': getUserId(event)
-    },
-   
-};
+  const authorization=event.headers.Authorization
+  const split=authorization.split(' ')
+  const jwtToken=split[1]
+  
 try {
-  await docClient.delete(params).promise()
+  await deleteTodo(jwtToken,todoId)
   logger.info("todo deleted ${todoId}")
   return {
     statusCode: 201,
